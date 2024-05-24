@@ -14,7 +14,7 @@ body{
         font-size: 30px;
         font-weight: bold;
     }
-    
+
     #body{
         position: fixed;
         max-width: 100%;
@@ -46,7 +46,7 @@ body{
                 background-color: #7c19da;
                 color: #ffffff;
             }
-            
+
                 #chat_roomInfo{
                     position: absolute;
                     top: 0;
@@ -75,7 +75,7 @@ body{
                         font-size: 15px;
                         font-weight: bold;
                     }
-                
+
                 #show_side_panel_btn{
                 position: absolute;
                 top: 0;
@@ -144,7 +144,7 @@ body{
                     .chat_message_message{
                         margin: 2px;
                     }
-                
+
             #chat_form{
                 position: absolute;
                 bottom: 10px;
@@ -152,7 +152,7 @@ body{
                 width: 100%;
                 align-content: center;
             }
-        
+
                 #recipients_input{
                     display: none;
                 }
@@ -178,13 +178,13 @@ body{
                     box-sizing: border-box;
                     margin: 0;
                     right: 0;
-                    padding: 12px;    
+                    padding: 12px;
                     background-color: #4CAF50;
                     border-color: #277c2a;
                     border-radius: 20px;
                     cursor: pointer;
                 }
-        
+
         #side_panel{
             position: absolute;
             top: 0;
@@ -206,7 +206,7 @@ body{
                 max-width: 100%;
                 background-color: #a460c7;
             }
-            
+
                 #hide_side_panel_btn{
                     position: absolute;
                     top: 0;
@@ -228,6 +228,13 @@ body{
                 .member_ban_btn{
                     border-radius: 2px;
                     background-color: #d36e5c;
+                    border: none;
+                    cursor: pointer;
+                }
+
+                .member_handover_admin_btn{
+                    border-radius: 2px;
+                    background-color: #b05cd3;
                     border: none;
                     cursor: pointer;
                 }

@@ -1,13 +1,13 @@
 $(document).ready(function(){
     let messages = [];
     let error_count = 0;
-    
-    function addMessage(name, uid, triphash, mid, message){
+
+    function addMessage(name, uid, triphash, mid, message, timestamp){
         name = name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         triphash = String(triphash).replace(/</g, "&lt;").replace(/>/g, "&gt;");
         mid = mid.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         message = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        $("#chat_log").append(`<div class="chat_message" uid="${uid}" mid="${mid}"><span class="chat_message_sender">${name}</span><span class="chat_message_sender_triphash">${triphash}</span><br><span class="chat_message_message">${message}</span></div>`);
+        $("#chat_log").append(`<div class="chat_message" uid="${uid}" mid="${mid}"><span class="chat_message_sender">${name}</span><span class="chat_message_sender_triphash">${triphash}</span><br><span class="chat_message_timestamp">${new Date(timestamp).toLocaleString()}</span><br><span class="chat_message_message">${message}</span></div>`);
         if(autoScroll){ $("#chat_log").scrollTop($("#chat_log")[0].scrollHeight); }
     }
 
@@ -20,7 +20,7 @@ $(document).ready(function(){
                 if (lastmidindex != -1) { response.messages = response.messages.slice(lastmidindex+1); }
                 messages = response.messages;
                 users = response.users;
-                for(let i=0; i<messages.length; i++){ addMessage(messages[i].handlename, messages[i].username, messages[i].triphash, messages[i].id, messages[i].message); }
+                for(let i=0; i<messages.length; i++){ addMessage(messages[i].handlename, messages[i].username, messages[i].triphash, messages[i].id, messages[i].message, messages[i].timestamp); }
                 $("#chat_onlineCount").text(response.users.length+"/"+response.max_users);
                 $("#chat_roomName").text(response.name);
                 $("#members_list").html("");
@@ -29,11 +29,12 @@ $(document).ready(function(){
                     users[i].triphash = users[i].triphash.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                     if(users[i].uid == response.admin_uid) $("#members_list").append(`<div class="member_admin" uid="${users[i].uid}"><span class="member_name">${users[i].handlename}</span><br><span class="member_id">${users[i].triphash}</span><br><span class="member_admin_tag">(admin)</span></div>`);
                     else $("#members_list").append(`<div class="member" uid="${users[i].uid}"><span class="member_name">${users[i].handlename}</span><br><span class="member_id">${users[i].triphash}</span><br>
-                    <button class="member_kick_btn" uid="${users[i].uid}">Kick</button><button class="member_ban_btn" uid="${users[i].uid}">Ban</button></div>`);
+                    <button class="member_kick_btn" uid="${users[i].uid}">Kick</button><button class="member_ban_btn" uid="${users[i].uid}">Ban</button><button class="member_handover_admin_btn" uid="${users[i].uid}">管理者にする</button></div>`);
                 }
                 if(response.isAdmin){
                     $(".member_kick_btn").css("display", "block");
                     $(".member_ban_btn").css("display", "block");
+                    $(".member_handover_admin_btn").css("display", "block");
                     $("#change_max_users_btn").css("display", "block");
                     $("#change_room_name_btn").css("display", "block");
                     $("#handover_host_btn").css("display", "block");
@@ -41,6 +42,7 @@ $(document).ready(function(){
                 else{
                     $(".member_kick_btn").css("display", "none");
                     $(".member_ban_btn").css("display", "none");
+                    $(".member_handover_admin_btn").css("display", "none");
                     $("#change_max_users_btn").css("display", "none");
                     $("#change_room_name_btn").css("display", "none");
                     $("#handover_host_btn").css("display", "none");
@@ -84,13 +86,22 @@ $(document).ready(function(){
             error: function(xhr, status, error) {console.error("Error banning member:", error);}
         });
     });
-    
+
+    $("#member_list").on("click", ".member_handover_admin_btn", function() {
+        $.ajax({
+            url: "/room",
+            method: "POST",
+            data: { action: "handoverAdmin", target_uid: $(this).attr("uid") },
+            success: function(response) {},
+            error: function(xhr, status, error) {console.error("Errorn handing over admin:", error);}
+        });
+    });
 
     $("#send_btn").click(function() {
         if($("#message_input").val().length==0 || $("#message_input").val().length>500) return;
         $.ajax({
-            url: "/room", 
-            method: "POST", 
+            url: "/room",
+            method: "POST",
             data: {action: "send", message: $("#message_input").val()},
             success: function(response) {$("#message_input").val("");},
             error: function(xhr, status, error) {console.error("Error sending message:", error);}

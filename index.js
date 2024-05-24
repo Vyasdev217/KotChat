@@ -6,7 +6,6 @@ const app       = express();
 const fs        = require('fs');
 const config = JSON.parse(fs.readFileSync('../config.json'));
 const server    = http.createServer({key: fs.readFileSync('../certs/private.key'),cert: fs.readFileSync('../certs/cert.pem'),}, app);
-//const server    = http.createServer(app);
 app.set('view engine', 'ejs');
 app.set('views', __dirname+'/views');
 app.use(cookieParser());
@@ -18,6 +17,7 @@ let access_tokens = {};
 let users = {};
 let db = new DictMongoDB(config["KOTCHAT_MONGO_CONNECTION_STRING"]);
 let isReady = false;
+let su_admin_uid = "0";
 
 function triphash(tripcode){
     let hash = require('crypto').createHash('sha256').update(tripcode + config.hashsalt).digest('hex');
@@ -42,12 +42,10 @@ class Chatroom {
         this.bannedIPs = [];
         this.created = Date.now();
         this.lastActive = Date.now();
-        this.immortal = immortal
-    }
-    init(){
+        this.immortal = immortal;
         setInterval(() => {
             this.pulseCheck();
-        }, 300000);
+        }, 60000);
         this.pulseCheck()
     }
     addUser(uid){
@@ -58,7 +56,7 @@ class Chatroom {
         this.uids.push(uid);
         users[uid].chatroom = this.id;
         this.lastActive = Date.now();
-        this.addSystemMessage(users[uid].handlename + " enterd the chat room");
+        this.addSystemMessage(users[uid].handlename + " entered the chatroom");
         return [200, "Added user"];
     }
     removeUser(uid){
@@ -72,18 +70,19 @@ class Chatroom {
     }
     addMessage(uid, message){
         if(!this.uids.includes(uid)) return [400, "Not in chatroom"]
-        else this.messages.push({id: Utils.randstr(20), handlename: users[uid].handlename, triphash: users[uid].triphash, message: message});
+        else this.messages.push({id: Utils.randstr(20), handlename: users[uid].handlename, triphash: users[uid].triphash, message: message, timestamp: Date.now()});
         if(this.messages.length > 50){ this.messages.shift(); }
         this.lastActive = Date.now();
         return [200, "Message added"]
     }
     addSystemMessage(message){
-        this.messages.push({id: Utils.randstr(20), handlename: "SERVER", triphash: 0, message: message});
+        this.messages.push({id: Utils.randstr(20), handlename: "SERVER", triphash: 0, message: message, timestamp: Date.now()});
         this.lastActive = Date.now();
         return [200, "System message added"]
     }
     kickUser(uid, ban = false){
-        if(uid=="0") return [400, "Cannot kick admin"]
+        if(uid==su_admin_uid) return [400, "Cannot kick this user"];
+        if (!this.uids.includes(uid)) return [400, "Not in chatroom"]
         if (ban && !this.bannedIPs.includes(users[uid].ip)) this.bannedIPs.push(users[uid].ip);
         this.removeUser(uid);
         this.addSystemMessage(users[uid].handlename + " was kicked");
@@ -93,27 +92,21 @@ class Chatroom {
         this.max_users = max_users;
         return [200, "Max users updated"]
     }
-    updateRoomName(name){
-        this.name = name;
-        return [200, "Room name updated"]
-    }
     handoverAdmin(uid){
+        if (!this.uids.includes(uid)) return [400, "Not in chatroom"]
         this.admin_uid = uid;
         this.addSystemMessage(users[uid].handlename + " is admin now");
         return [200, "Admin handed over"]
     }
-    pulse(){
-        this.lastActive = Date.now();
-        return [200, "Pulse sent"]
-    }
     pulseCheck(){
         for(let i=0;i<this.uids.length;i++){
             if(users[this.uids[i]].lastseen < (Date.now() - 30000)){
+                let handlename = users[this.uids[i]].handlename;
                 this.removeUser(this.uids[i]);
-                this.addSystemMessage(users[this.uids[i]].handlename + " was kicked due to inactivity");
+                this.addSystemMessage(handlename + " was kicked due to inactivity");
             }
         }
-        if (Date.now() - this.lastActive > 1200000 && !this.immortal){
+        if(Date.now() - this.lastActive > 3600000 && !this.immortal){
             for (let i = 0; i < this.uids.length; i++){
                 this.removeUser(this.uids[i]);
             }
@@ -126,7 +119,6 @@ class Chatroom {
             let uid = this.uids[i];
             usrs.push({uid: uid, handlename: users[uid].handlename, triphash: users[uid].triphash});
         }
-        this.lastActive = Date.now();
         return [200, {
             id: this.id,
             name: this.name,
@@ -143,7 +135,7 @@ class Chatroom {
 }
 
 async function init(){
-    await db.initialize("KotChat", ["data"]);
+    await db.initialize("KotChat", ["data", "user_records"]);
     function saveState(){
         db["data"].updateOne({id: "stateBackup"}, {$set: {chatrooms: chatrooms, access_tokens: access_tokens, users: users}}, {upsert: true});
     }
@@ -164,22 +156,26 @@ async function init(){
             users = data[0].users;
         });
     }
-    function cleanOldTokens(){
+    function cleanGarbageSessions(){
         for (let token in access_tokens){
             if (users[access_tokens[token]] == undefined) delete access_tokens[token];
-            else if(users[access_tokens[token]].lastseen < Date.now() - 86400000) delete access_tokens[token];
+            else if(users[access_tokens[token]] == undefined) delete access_tokens[token];
+            else if(users[access_tokens[token]].lastseen < (Date.now() - 86400000)) {
+                if(users[access_tokens[token]].chatroom != undefined) chatrooms[users[access_tokens[token]].chatroom].removeUser(access_tokens[token]);
+                delete users[access_tokens[token]];
+                delete access_tokens[token];
+            }
         }
     }
     loadState();
-    cleanOldTokens();
+    cleanGarbageSessions();
     if(chatrooms["immortal_daredemo"] == undefined){
         chatrooms["immortal_daredemo"] = new Chatroom("誰でも雑談", "0", "", 100, true);
         chatrooms["immortal_daredemo"].id = "immortal_daredemo";
-        chatrooms["immortal_daredemo"].init();
     }
     setInterval(() => {
+        cleanGarbageSessions();
         saveState();
-        cleanOldTokens();
     }, 60000);
     isReady = true;
 }
@@ -187,7 +183,7 @@ init();
 
 app.use((req, res, next) => {
     if(isReady) next();
-    else res.status(503).send("Service Unavailable");
+    else res.status(503).send("Service Unavailable. Please reload the page after a few seconds.");
 });
 
 function auth(access_token){
@@ -207,11 +203,9 @@ app.post("/login", async (req, res) => {
     if(temp[0] == 200){ if(users[temp[1]].chatroom != undefined) res.redirect("/room"); else res.redirect("/lounge"); }
     else{
         let handlename = req.body.handlename;
-        let icon = req.body.icon;
         let tripcode = req.body.tripcode;
         let user = {
             handlename: handlename,
-            icon: icon,
             triphash: triphash(tripcode),
             ip: req.ip,
             chatroom: undefined,
@@ -221,15 +215,10 @@ app.post("/login", async (req, res) => {
         users[uid] = user;
         let access_token = Utils.randstr(100);
         access_tokens[access_token] = uid;
+        db["user_records"].updateOne({uid: uid}, {$set: {handlename: handlename, triphash: triphash(tripcode), ip: req.ip}}, {upsert: true});
         res.cookie("access_token", access_token);
         res.redirect("/lounge");
     }
-});
-
-app.get("/create", (req, res) => {
-    let temp = auth(req.cookies["access_token"]);
-    if(temp[0] == 200){ if(users[temp[1]].chatroom != undefined) res.redirect("/room"); else res.status(200).render("create.ejs"); }
-    else{ res.redirect("/login"); }
 });
 
 function validateRoom(name, password, max_users){
@@ -241,24 +230,30 @@ function validateRoom(name, password, max_users){
     return issues;
 }
 
+app.get("/create", (req, res) => {
+    let temp = auth(req.cookies["access_token"]);
+    if(temp[0] == 200){ if(users[temp[1]].chatroom != undefined) res.redirect("/room"); else res.status(200).render("create.ejs"); }
+    else{ res.redirect("/login"); }
+});
+
 app.post("/create", (req, res) => {
     let temp = auth(req.cookies["access_token"]);
-    if(temp[0] == 200){ 
-        if(users[temp[1]].chatroom != undefined) res.redirect("/room"); 
+    if(temp[0] == 200){
+        if(users[temp[1]].chatroom != undefined) res.redirect("/room");
         else {
             let issues = validateRoom(req.body.name, req.body.password, req.body.max_users);
             if(issues.length > 0){ res.status(400).send(issues); return; }
             let chatroom = new Chatroom(req.body.name, temp[1], req.body.password, req.body.max_users);
-            chatrooms[chatroom.id] = chatroom; chatrooms[chatroom.id].init(); chatrooms[chatroom.id].addUser(temp[1]);
+            chatrooms[chatroom.id] = chatroom; chatrooms[chatroom.id].addUser(temp[1]);
             res.redirect("/room");
-        } 
+        }
     }
     else{ res.redirect("/login"); }
 });
 
 app.get("/lounge", (req, res) => {
     let temp = auth(req.cookies["access_token"]);
-    if(temp[0] == 200){ 
+    if(temp[0] == 200){
         if(users[temp[1]].chatroom != undefined) res.redirect("/room");
         else {
             let cr={};
@@ -266,7 +261,7 @@ app.get("/lounge", (req, res) => {
                 let uids = chatrooms[rid].uids;
                 let members = [];
                 for(let j=0;j<uids.length;j++){
-                    members.push({handlename: users[uids[j]].handlename, triphash: users[uids[j]].triphash});
+                    members.push({handlename: users[uids[j]].handlename});
                 }
                 cr[rid] = {
                     name: chatrooms[rid].name,
@@ -301,7 +296,7 @@ app.get("/join/:room_id", (req, res) => {
 
 app.get("/room", (req, res) => {
     let temp = auth(req.cookies["access_token"]);
-    if(temp[0] == 200){ 
+    if(temp[0] == 200){
         let room = chatrooms[users[temp[1]].chatroom];
         if(room == undefined){ users[temp[1]].chatroom=undefined; res.redirect("/login"); return; }
         res.status(200).render("room.ejs");
@@ -309,7 +304,6 @@ app.get("/room", (req, res) => {
     else{
         res.redirect("/login");
     }
-    
 });
 
 app.post("/room", (req, res) => {
@@ -321,7 +315,7 @@ app.post("/room", (req, res) => {
     if(action == "fetch"){
         users[temp[1]].lastseen = Date.now();
         let ret = room.fetch();
-        ret[1].isAdmin = (ret[1].admin_uid == temp[1]) || ("0" == temp[1]);
+        ret[1].isAdmin = (ret[1].admin_uid == temp[1]) || (su_admin_uid == temp[1]);
         res.status(ret[0]).send(ret[1]);
     }
     if(action == "send"){
@@ -331,27 +325,27 @@ app.post("/room", (req, res) => {
     }
     if(action == "leave"){
         let ret = room.removeUser(temp[1]);
-        if (ret[0] == 200) room.addSystemMessage(users[temp[1]].handlename + " left the chat room");
+        if (ret[0] == 200) room.addSystemMessage(users[temp[1]].handlename + " left the chatroom");
         res.redirect("/lounge");
     }
     if(action == "kick"){
         if(!room.uids.includes(temp[1])){ res.status(400).send("Not in chatroom"); return; }
-        if(room.admin_uid != temp[1] && temp[1] != "0"){ res.status(403).send("Unauthorized"); return; }
+        if(room.admin_uid != temp[1] && temp[1] != su_admin_uid){ res.status(403).send("Unauthorized"); return; }
         let ret = room.kickUser(req.body.target_uid);
         res.status(ret[0]).send(ret[1]);
     }
     if(action == "updateMaxUsers"){
-        if(room.admin_uid != temp[1] && temp[1] != "0"){ res.status(403).send("Unauthorized"); return; }
+        if(room.admin_uid != temp[1] && temp[1] != su_admin_uid){ res.status(403).send("Unauthorized"); return; }
         let ret = room.updateMaxUser(req.body.max_users);
         res.status(ret[0]).send(ret[1]);
     }
     if(action == "updateRoomName"){
-        if(room.admin_uid != temp[1] && temp[1] != "0"){ res.status(403).send("Unauthorized"); return; }
+        if(room.admin_uid != temp[1] && temp[1] != su_admin_uid){ res.status(403).send("Unauthorized"); return; }
         let ret = room.updateRoomName(req.body.name);
         res.status(ret[0]).send(ret[1]);
     }
     if(action == "handoverAdmin"){
-        if(room.admin_uid != temp[1] && temp[1] != "0"){ res.status(403).send("Unauthorized"); return; }
+        if(room.admin_uid != temp[1] && temp[1] != su_admin_uid){ res.status(403).send("Unauthorized"); return; }
         let ret = room.handoverAdmin(req.body.target_uid);
         res.status(ret[0]).send(ret[1]);
     }
@@ -361,9 +355,9 @@ app.get("/logout", (req, res) => { res.clearCookie("access_token"); res.redirect
 
 app.get("/", (req, res) => {
     let temp = auth(req.cookies["access_token"]);
-    if(temp[0] == 200){ 
+    if(temp[0] == 200){
         if(users[temp[1]].chatroom != undefined) res.redirect("/room");
-        else res.redirect("/lounge");    
+        else res.redirect("/lounge");
     }
     else res.redirect("/login");
 });
@@ -373,15 +367,24 @@ app.get("/public/:file", (req, res) => {
 });
 
 app.post("/su", (req, res) => {
+    let handlename = req.body.handlename;
+    let tripcode = req.body.tripcode;
     let password = req.body.password;
     if(password == fs.readFileSync("../password.txt").toString().trim()){
-        let access_token = Utils.randstr(100);
-        access_tokens[access_token] = "0";
-        users["0"] = {
-            handlename: "Kot",
-            icon: "",
-            triphash: "admin",
-            ip: "0",
+        let access_token;
+        while(true){
+            access_token = Utils.randstr(100);
+            if(access_tokens[access_token] == undefined) break;
+        }
+        while(true){
+            su_admin_uid = Utils.randstr(100);
+            if (users[su_admin_uid] == undefined) break;
+        }
+        access_tokens[access_token] = su_admin_uid;
+        users[su_admin_uid] = {
+            handlename: handlename,
+            triphash: triphash(tripcode),
+            ip: req.ip,
             chatroom: undefined,
             lastseen: Date.now()
         };
@@ -389,6 +392,20 @@ app.post("/su", (req, res) => {
         res.redirect("/lounge");
     }
     else res.status(401).send("Unauthorized");
+});
+
+app.get("/su", (req, res) => {
+    for (let token in access_tokens){
+        if (access_tokens[token] == su_admin_uid) delete access_tokens[token];
+    }
+    res.status(200).send(`
+    <form action="/su" method="post">
+        <input type="text" name="handlename" placeholder="Handlename">
+        <input type="text" name="tripcode" placeholder="Tripcode">
+        <input type="password" name="password" placeholder="Password">
+        <input type="submit">
+    </form>
+    `);
 });
 
 server.listen(443, () => {
