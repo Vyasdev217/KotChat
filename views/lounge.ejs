@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>KotChat</title>
+        <link rel="stylesheet" href="/public/lounge.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/css/uikit.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/js/uikit.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/js/uikit-icons.min.js"></script>
+    </head>
+    <body>
+        <div id="body">
+            <h1 class="uk-heading-line"><span>KotChat</span></h1>
+            <div id="profile_panel">
+                <div id="profile">
+                    <span id="handlename"><%= handlename %></span> : 
+                    <span id="triphash"><%= triphash %></span><br>
+                    <span class="lounge_menu_buttons" onclick="window.location='/create'">Create Room</span><br>
+                    <span class="lounge_menu_buttons" onclick="window.location='/logout'">Logout</span>
+                </div>
+            </div>
+            <div id="rooms" class="uk-grid uk-grid-small uk-child-width-1-5@m uk-child-width-1-1@s uk-text-center" uk-grid>
+                <% Object.keys(chatrooms).forEach(roomId => { %>
+                    <div class="uk-card">
+                        <div class="uk-card-title">
+                            <h3><%= chatrooms[roomId].name %></h3>
+                        </div>
+                        <div class="uk-card-body">
+                            <div class="uk-grid uk-grid-small uk-child-width-1-3@m uk-child-width-1-1@s uk-text-center member_span" uk-grid>
+                                <% chatrooms[roomId].members.forEach(member => { %>
+                                    <!--img src="/icons/<%= member.icon %>.png" alt="<%= member.handlename %>" class="icon"-->
+                                    <span><%= member.handlename %></span> 
+                                <% }) %>
+                            </div>
+                        </div>
+                        <div class="uk-card-footer">
+                            <a href="/join/<%= roomId %>" class="uk-button uk-button-primary">Join</a>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </body>
+</html>

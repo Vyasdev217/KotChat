@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
+    <head>
+        <title>KotChat</title>
+        <link rel="stylesheet" type="text/css" href="/public/room.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="/public/room.js"></script>
+    </head>
+    <body>
+        <div id="header">KotChat</div>
+        <div id="body">
+            <div id="chat_panel">
+                <div id="chat_header">
+                    <div id="chat_roomInfo">
+                        <span id="chat_roomName"></span>
+                        <br>
+                        <span id="chat_onlineCount"></span>
+                    </div>
+                    <button id="leave_room_btn">Leave</button>
+                    <button id="show_side_panel_btn"><<<<</button>
+                </div>
+                <div id='chat_log' class="chat_log"></div>
+                <div id="chat_form">
+                    <input id="recipients_input" type="text" name="recipients" placeholder="Recipient (Keep blank for broadcast)" hidden="true">
+                    <input id="message_input" type="text" name="message" placeholder="Message"/>
+                    <button id="send_btn" type="button" onclick="send()">Send</button>
+                </div>
+            </div>
+            
+            <div id="side_panel">
+                <div id="side_panel_menu">
+                    <button id="hide_side_panel_btn">>>>></button>
+                </div>
+
+                <div id="members_panel">
+                    <span style="position:absolute;text-align:center;font-weight:bold;font-size:17px;width:100%">Users</span>
+                    <br>
+                    <div id="members_list">
+                    </div>
+                </div>
+            </div>
+        </div> 
+    </body>
+</html>

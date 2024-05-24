@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>KotChat</title>
+        <link rel="stylesheet" href="/public/login.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/css/uikit.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/js/uikit.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/js/uikit-icons.min.js"></script>
+    </head>
+    <body>
+        <div id="body" class="uk-container uk-container-small uk-margin-top">
+            <h1 class="uk-heading-line"><span>KotChat</span></h1>
+            <form id="login-form" method="post" action="/login" class="uk-form-stacked">
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="handlename">Nickname</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="handlename" name="handlename" type="text" required>
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="tripcode">Tripcode (Anti-Impersonation Password)</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="tripcode" name="tripcode" type="password" required>
+                    </div>
+                </div>
+                <button type="submit">ログイン</button>
+            </form>
+        </div>
+    </body>
+</html>

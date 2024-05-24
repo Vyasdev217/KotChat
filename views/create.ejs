@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>KotChat</title>
+        <link rel="stylesheet" href="/public/login.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/css/uikit.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/js/uikit.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/uikit@3.7.0/dist/js/uikit-icons.min.js"></script>
+    </head>
+    <body>
+        <div class="uk-container uk-container-small uk-margin-top">
+            <h1 class="uk-heading-line"><span>Create chatroom</span></h1>
+            <form id="create-form" method="post" action="/create" class="uk-form-stacked">
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="name">Room name</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="name" name="name" type="text" required>
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="password">Password (Leave blank if no password)</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="password" name="password" type="text">
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="max_users">Max users</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="max_users" name="max_users" type="number" min="1" max="50" required>
+                    </div>
+                </div>
+                <button class="uk-button uk-button-primary" type="submit">Create</button>
+            </form>
+        </div>
+    </body>
+</html>

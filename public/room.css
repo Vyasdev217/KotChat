@@ -1,0 +1,292 @@
+body{
+    background-color: #48cd88;
+}
+    #header{
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        width: 100%;
+        text-align: center;
+        background-color: #48cd88;
+        color: #000000;
+        font-size: 30px;
+        font-weight: bold;
+    }
+    
+    #body{
+        position: fixed;
+        max-width: 100%;
+        top:0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin-top: 0;
+        margin-left: 0;
+        margin-right: 0;
+        margin-bottom: 0;
+    }
+        #chat_panel{
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #9a65cc;
+        }
+
+            #chat_header{
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 50px;
+                background-color: #7c19da;
+                color: #ffffff;
+            }
+            
+                #chat_roomInfo{
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    width: 80%;
+                    height: 100%;
+                    box-sizing: border-box;
+                    padding: 10px;
+                    padding-inline-start: 20px;
+                    padding-inline-end: 20px;
+                }
+
+                    #chat_roomName{
+                        position: inherit;
+                        top: 0;
+                        width: 100%;
+                        font-size: 20px;
+                        font-weight: bold;
+                    }
+
+                    #chat_onlineCount{
+                        position: inherit;
+                        bottom: 0;
+                        font-size: 15px;
+                        font-weight: bold;
+                    }
+                
+                #show_side_panel_btn{
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 50px;
+                background-color: #b95cd3;
+                border: none;
+                cursor: pointer;
+                }
+
+                #leave_room_btn{
+                    position: absolute;
+                    top: 0;
+                    right: 50px;
+                    bottom: 0;
+                    width: 50px;
+                    background-color: #d35c5c;
+                    border: none;
+                    cursor: pointer;
+                }
+
+            #chat_log{
+                position:absolute;
+                top:50px;
+                left: 0;
+                right: 0;
+                bottom: 50px;
+                width: 100%;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+                .chat_message{
+                    position: sticky;
+                    max-width: 80%;
+                    width:fit-content;
+                    margin: 10px;
+                    padding: 10px;
+                    border-radius: 5px;
+                    background-color: #4ab95d;
+                    word-wrap: break-word;
+                }
+
+                    .chat_message:hover{
+                        position: relative;
+                        max-width: 80%;
+                        width:fit-content;
+                        margin: 10px;
+                        padding: 10px;
+                        border-radius: 5px;
+                        background-color: #2d7f3b;
+                        word-wrap: break-word;
+                    }
+
+                    .chat_message_sender{
+                        margin: 2px;
+                        font-weight: bold;
+                    }
+
+                    .chat_message_sender_triphash{
+                        margin: 2px;
+                        font-weight: italic;
+                        color: gray;
+                    }
+
+                    .chat_message_message{
+                        margin: 2px;
+                    }
+                
+            #chat_form{
+                position: absolute;
+                bottom: 10px;
+                margin: 2px;
+                width: 100%;
+                align-content: center;
+            }
+        
+                #recipients_input{
+                    display: none;
+                }
+
+                #message_input{
+                    width: 80%;
+                    height: 100%;
+                    box-sizing: border-box ;
+                    margin: 0;
+                    left: 0;
+                    padding: 12px;
+                    padding-inline-start: 20px;
+                    padding-inline-end: 20px;
+                    background-color: #b697d4;
+                    border-color: #3e0178;
+                    border-radius: 20px;
+                    word-wrap: normal;
+                }
+
+                #send_btn{
+                    width: 16%;
+                    height: 100%;
+                    box-sizing: border-box;
+                    margin: 0;
+                    right: 0;
+                    padding: 12px;    
+                    background-color: #4CAF50;
+                    border-color: #277c2a;
+                    border-radius: 20px;
+                    cursor: pointer;
+                }
+        
+        #side_panel{
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 0;
+            max-width: 100%;
+            background-color: #a460c7;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+            #side_panel_menu{
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 50px;
+                width: 300px;
+                max-width: 100%;
+                background-color: #a460c7;
+            }
+            
+                #hide_side_panel_btn{
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    bottom: 0;
+                    width: 60px;
+                    background-color: #b95cd3;
+                    border: none;
+                    cursor: pointer;
+                }
+
+                .member_kick_btn{
+                    border-radius: 2px;
+                    background-color: #d3a35c;
+                    border: none;
+                    cursor: pointer;
+                }
+
+                .member_ban_btn{
+                    border-radius: 2px;
+                    background-color: #d36e5c;
+                    border: none;
+                    cursor: pointer;
+                }
+
+            #members_panel{
+                position: absolute;
+                top: 50px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #b05cd3;
+            }
+
+                .member_admin{
+                    position: relative;
+                    width: 80%;
+                    margin: 10px;
+                    padding: 10px;
+                    background-color: #b9a34a;
+                    border-radius: 5px;
+                    word-wrap: break-word;
+                }
+
+                    .member_admin:hover{
+                        position: relative;
+                        width: 80%;
+                        padding: 10px;
+                        margin: 10px;
+                        background-color: #7d6e32;
+                        border-radius: 5px;
+                        word-wrap: break-word;
+                    }
+
+                .member{
+                    position: relative;
+                    width: 80%;
+                    margin: 10px;
+                    padding: 10px;
+                    background-color: #4ab95d;
+                    border-radius: 5px;
+                    word-wrap: break-word;
+                }
+
+                    .member:hover{
+                        position: relative;
+                        width: 80%;
+                        padding: 10px;
+                        margin: 10px;
+                        background-color: #2d7f3b;
+                        border-radius: 5px;
+                        word-wrap: break-word;
+                    }
+
+                    .member_name{
+                        margin: 2px;
+                        font-size: large;
+                    }
+
+                    .member_id{
+                        margin: 2px;
+                        color:gray;
+                    }
