@@ -27,6 +27,7 @@ To install KotChat, follow these steps:
    }
    ```
    - `password.txt`: Text file containing the password for total admin access.
+   - `certs/private.key` and `certs/cert.pem`: SSL certificates for secure communication.
 
 4. Install dependencies:
 
@@ -42,7 +43,7 @@ To start the KotChat server, run the following command:
 npm start
 ```
 
-By default, the server will be running on port 3000. You can access the application by navigating to `http://localhost:3000` in your web browser.
+By default, the server will be running on port 443. You can access the application by navigating to `https://yourdomain` or `https://localhost` in your web browser.
 
 To gain total admin access, make a POST request to `/su` with the following data:
 ```json
